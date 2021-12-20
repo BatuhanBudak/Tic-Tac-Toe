@@ -1,0 +1,20 @@
+
+
+.game-board-container{
+    display: none;
+    flex-wrap: wrap;
+    width: 600px;
+    height: 600px;
+    background-color: #c4bdb7;
+    align-items: flex-start;
+    flex-basis: auto;
+    align-content: flex-end;
+    margin-top: 25px;
+    
+ }
+
+.board-node{
+    outline: 1px solid black;
+    height: 200px;
+    width: 200px;
+}
