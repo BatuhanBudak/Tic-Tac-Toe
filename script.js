@@ -1,10 +1,16 @@
+let playerOne;
+let playerTwo;
+let gameBoardArray = [];
+
 const createGameBoard = function(){
     
-    let gameBoardArray = [];
+    
     const boardLength = 9; //Fixed game board 
     const gameBoardContainer = document.querySelector(".game-board-container");
     gameBoardContainer.style.display = "flex";
     
+   
+
     function _populateGameBoardArray() {
 
        for (let index = 0; index < boardLength; index++) {
@@ -16,15 +22,17 @@ const createGameBoard = function(){
 
             let boardNode = document.createElement("div");
             boardNode.classList.add("board-node");
-            boardNode.addEventListener("click", gameController.changeNodeValue)
+            boardNode.textContent = "";
             boardNode.id = gameBoardArray[i].getId();
             gameBoardContainer.appendChild(boardNode);
         }
     }
     
+    
     _populateGameBoardArray();
     _populateGameBoardContainer();
-    
+    gameController();
+   
 
 };
 
@@ -38,7 +46,7 @@ const GameBoardNode = function Node(id, value = "") {
         value = x;
         isMarked = true;}
     
-    return {getId, getValue, getMark,changeValue};
+    return {getId, getValue, getMark, changeValue};
 };
 
 const Player = (name, signature) => {
@@ -47,64 +55,69 @@ const Player = (name, signature) => {
     let score = 0;
     const getSignature = () => signature;
     const getPlayStatus = () => isPlayed;
-    const changePlayStatus = () => this.getPlayStatus() = !this.getPlayStatus();
+    const getName = () => name;
+    const changePlayStatus = () => {
+        isPlayed = !getPlayStatus();
+    }
     const getScore = () => score;
     const incrementPlayerScore = () => ++this.score;
-    return {getSignature, getPlayStatus, changePlayStatus, getScore, incrementPlayerScore};
+    return {getSignature, getPlayStatus, changePlayStatus, getScore, incrementPlayerScore, getName};
 }
 
 function createPlayers() {
-    let playerOne;
-    let playerTwo;
     
     
     const submitButton = document.querySelector("#submit");
     submitButton.addEventListener("click", handleSubmit);
-        
+   
     
-
 }
 function handleSubmit(e){
     e.preventDefault();
     const playerOneInputForm = document.querySelector("#player-one");
     const playerTwoInputForm = document.querySelector("#player-two");
-    const form = document.querySelector(".form-container"); 
     playerOne = Player(playerOneInputForm.value, "X");
     playerTwo = Player(playerTwoInputForm.value, "O");
-    
+    const form = document.querySelector(".form-container"); 
     form.style.display = "none";
-    createGameBoard();
     playerOneInputForm.value ="";
     playerTwoInputForm.value ="";
-    return {playerOne, playerTwo};
-
+    createGameBoard();
 }
 
 const gameController = () => {
-    let currentPlayer = createPlayers.playerOne;
-    
-    if(currentPlayer=== createPlayers.playerOne && createPlayers.playerOne.getPlayStatus()){
-        currentPlayer = createPlayers.playerTwo;
-    }
-    
-    else if(currentPlayer=== createPlayers.playerTwo && createPlayers.playerTwo.getPlayStatus()){
-        currentPlayer = createPlayers.playerOne;
-    }
 
+    let currentPlayerName = playerOne.getName();
+    let currentPlayer = playerOne;
+    const boardNodes = Array.from(document.querySelectorAll(".board-node"));
+    boardNodes.forEach(node => node.addEventListener("click", changeNodeValue));
+       
+    
+   /*while (true){
+        if(currentPlayer.name === playerOne.getName() && !currentPlayer.getPlayStatus()){
+
+        }
+
+        else if(currentPlayer=== playerTwo.getName() && !currentPlayer.getPlayStatus()){
+
+        }
+    }*/
     function changeNodeValue(e) {
-        
-        if(e.target.getMark()) return;
-        e.target.changeValue(currentPlayer.getSignature());
-        currentPlayer.changePlayStatus();
 
+        let targetGameNode = gameBoardArray[e.target.id];
+        if(targetGameNode.getMark()) return;
+        targetGameNode.changeValue(currentPlayer.getSignature());
+        e.target.textContent = currentPlayer.getSignature();
+        currentPlayer.changePlayStatus();
+        if( currentPlayer.getName() == playerOne.getName()) {
+            currentPlayer = playerTwo;}
+        else {
+            currentPlayer = playerOne;
+        }
         //render()
         
     }
-    
-  return {changeNodeValue}  
-  
 }
+
+
 createPlayers();
-
-
-
