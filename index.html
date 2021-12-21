@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>Tic-Tac-Toe</h1>
 
     <form class="form-container">
         <label for="player-one"> Player 1: </label><br>
@@ -17,11 +18,26 @@
         <input type="text" id="player-two" name="player-two" placeholder="Enter a name" required><br>
         <input type="submit" id= "submit" value="Submit">
     </form>
-<div class="game-board-container">
+
+    <div class="main-game-container">
+        <div class="player-one-display">
+            <h2>Player One:</h2>
+            <h2 id="player-one-score">Score</h2>
+            <h2 id="player-one-score-text">0</h2>
+        </div>
+        
+        <div class="game-board-container"> </div>
+
+        <div class="player-two-display">
+            <h2 >Player Two: </h2>
+            <h2 id="player-two-score">Score</h2>
+            <h2 id="player-two-score-text">0</h2>
+        </div>
+    </div>
 
   
 
-</div>
+
 
     
 </body>
