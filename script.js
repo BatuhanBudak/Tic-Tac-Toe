@@ -114,12 +114,11 @@ function handleSubmit(e){
 const gameController = () => {
 
     let moveCount = 0;
-    let roundCount = 0;
-   
+    let roundCount = 1;
+    let roundEnded = false;
     let currentPlayer = playerOne;
 
-    const boardNodes = Array.from(document.querySelectorAll(".board-node"));
-    boardNodes.forEach(node => node.addEventListener("click", changeNodeValue));
+    toggleBoardNodeClickEventListeners(true);
   
     function changeNodeValue(e) {
 
@@ -130,16 +129,32 @@ const gameController = () => {
         e.target.textContent = currentPlayer.getSignature();
 
         currentPlayer.changePlayStatus(); //Doesnt do anything
-        
         moveCount++;
+
+        
         checkRoundEndConditions(targetGameNode.getValue(),(e.target.id)[0],(e.target.id)[1]);
         checkGameEndConditions(playerOne, playerTwo);
-        if( currentPlayer.getName() == playerOne.getName()) {
-            currentPlayer = playerTwo;}
-        else {
-            currentPlayer = playerOne;
+        
+        if(!roundEnded){
+            if( currentPlayer.getName() == playerOne.getName()) {
+                currentPlayer = playerTwo;
+                createTurnDisplayElement(currentPlayer);
+            }
+            else {
+                currentPlayer = playerOne;
+                createTurnDisplayElement(currentPlayer);
+            }
         }
     }
+
+    function toggleBoardNodeClickEventListeners(bool){
+        const boardNodes = Array.from(document.querySelectorAll(".board-node"));
+    
+        bool ? boardNodes.forEach(node => node.addEventListener("click", changeNodeValue)):
+        boardNodes.forEach(node => node.removeEventListener("click", changeNodeValue));
+    }
+    
+    
 
     function checkRoundEndConditions(nodeValue, currentRow, currentColumn ){
         const totalRowsAndColumns = 3;
@@ -147,28 +162,30 @@ const gameController = () => {
         for(let i = 0; i < totalRowsAndColumns; i++){
             if(gameBoardArray[currentRow][i].getValue() != nodeValue)
             {
-                
+                roundEnded = false;
                 break;}
             if(i == totalRowsAndColumns-1){
                 console.log(currentPlayer.getName() + "has won!")
                 currentPlayer.incrementPlayerScore();
                 roundCount++;
-                updateDisplay();
+                updateDisplay(roundCount);
                 clearBoard();
+                roundEnded = true;
             }
         }
         //check col
         for(let i = 0; i < totalRowsAndColumns; i++){
             if(gameBoardArray[i][currentColumn].getValue() != nodeValue)
             {
-                
+                roundEnded = false;
                 break;}
             if(i == totalRowsAndColumns-1){
                 console.log(currentPlayer.getName() + "has won!")
                 currentPlayer.incrementPlayerScore();
                 roundCount++;
-                updateDisplay();
+                updateDisplay(roundCount);
                 clearBoard();
+                roundEnded = true;
             }
         }
         //check diag
@@ -176,14 +193,16 @@ const gameController = () => {
             //we're on a diagonal
             for(let i = 0; i < totalRowsAndColumns; i++){
                 if(gameBoardArray[i][i].getValue() != nodeValue){
+                    roundEnded = false;
                     break;
                 }
                 if(i == totalRowsAndColumns-1){
                     console.log(currentPlayer.getName() + "has won!")
                     currentPlayer.incrementPlayerScore();
                     roundCount++;
-                    updateDisplay();
+                    updateDisplay(roundCount);
                     clearBoard();
+                    roundEnded = true;
                 }
             }
         }
@@ -192,14 +211,16 @@ const gameController = () => {
             for(let i = 0; i < totalRowsAndColumns; i++){
                 if(gameBoardArray[i][(totalRowsAndColumns-1)-i].getValue() != nodeValue)
                 {
+                    roundEnded = false;
                     break;
                 }
                 if(i == totalRowsAndColumns-1){
                     console.log(currentPlayer.getName() + "has won!")
                     currentPlayer.incrementPlayerScore();
                     roundCount++;
-                    updateDisplay();
+                    updateDisplay(roundCount);
                     clearBoard();
+                    roundEnded = true;
                 }
             }
         }
@@ -207,9 +228,9 @@ const gameController = () => {
         if(moveCount == (Math.pow(totalRowsAndColumns, 2) - 1)){
             console.log("It's a draw.")
             roundCount++;
-            updateDisplay();
+            updateDisplay(roundCount);
             clearBoard();
-
+            roundEnded = true;
         }
     }
 
@@ -221,7 +242,7 @@ const gameController = () => {
             case ( secondPlayer.getScore() == 3 && firstPlayer.getScore()== 0 ):
                 console.log("Game over." + `${secondPlayer.getName()} has won!`)
                 break;
-            case ( roundCount >= 5 ):
+            case ( roundCount > 5 ):
                 firstPlayer.getScore() > secondPlayer.getScore() ? 
                 console.log("Game over." + `${firstPlayer.getName()} has won!`):
                 console.log("Game over." + `${secondPlayer.getName()} has won!`);
@@ -242,15 +263,19 @@ const gameController = () => {
 
         currentPlayer = playerOne;
         moveCount = 0;
+        createTurnDisplayElement(currentPlayer);
     }
 }
 
-function updateDisplay(){
+function updateDisplay(round){  //currentPlaying'i yeni fon a argument olara ata?
     
     let playerOneScoreText = document.querySelector("#player-one-score-text");
     let playerTwoScoreText = document.querySelector("#player-two-score-text");
+    let roundText = document.querySelector("#round");
     playerOneScoreText.textContent = playerOne.getScore();
     playerTwoScoreText.textContent = playerTwo.getScore();
+    
+    roundText.textContent = `Round: ${round}`;
 }
 
 function createMatrix( rows, cols, arr){
@@ -266,7 +291,40 @@ function createMatrix( rows, cols, arr){
     }
   
     return arr;
-  }
+}
+
+//TODO
+function createTurnDisplayElement(currentPlaying){
+    let playerOneDisplayCreated = false;
+    let playerTwoDisplayCreated = false;
+    
+    if(currentPlaying.getName() == playerOne.getName()){
+        if(!playerOneDisplayCreated){
+            let playerOnesTurnElement = document.createElement("h2");
+            playerOnesTurnElement.textContent = `${playerOne.getName()} is playing`;
+            let playerOneParent = document.querySelector(".player-one-display")
+            playerOneParent.appendChild(playerOnesTurnElement);
+        }else{
+            playerOnesTurnElement.textContent = `${playerOne.getName()} is playing`;
+            playerTwosTurnElement.style.display = "none";
+        }
+    
+    }
+    else{
+        if(!playerTwoDisplayCreated){
+
+            let playerTwosTurnElement = document.createElement("h2");
+            playerTwosTurnElement.textContent = `${playerTwo.getName()} is playing`;
+            let playerTwoParent = document.querySelector(".player-two-display")
+            playerTwoParent.appendChild(playerTwosTurnElement);
+        }else{
+            playerTwosTurnElement.textContent = `${playerTwo.getName()} is playing`;
+            playerOnesTurnElement.style.display = "none";
+
+        }
+      
+    }
+}
 
 
 
