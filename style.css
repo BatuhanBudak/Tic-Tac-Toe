@@ -55,3 +55,8 @@ body{
     justify-content: center;
     font-size: 75px;
 }
+
+.playeronesturndisplayelement,
+.playertwosturndisplayelement{
+    display: none;
+}

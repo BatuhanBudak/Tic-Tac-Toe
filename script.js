@@ -12,7 +12,7 @@ const createGameBoard = function(){
 
     
 
-    function CreatePlayerNameHeaders() {
+    function createPlayersNamesHeaders() {
         let playerOneNameHeader = document.createElement("h2");
         playerOneNameHeader.textContent = playerOne.getName();
         let playerOneScoreDisplay = document.querySelector("#player-one-score");
@@ -28,7 +28,7 @@ const createGameBoard = function(){
 
     function _populateGameBoardArray() {
 
-        gameBoardArray =  createMatrix(3, 3, gameBoardArray)
+        gameBoardArray =  createBoardMatrix(3, 3, gameBoardArray)
 
        for (let i = 0; i < boardRowAndColumnLength; i++) {
            for (let j = 0; j < boardRowAndColumnLength; j++) {
@@ -52,9 +52,11 @@ const createGameBoard = function(){
     
     _populateGameBoardArray();
     _populateGameBoardContainer();
-    CreatePlayerNameHeaders();
+    createPlayersNamesHeaders();
+    let playerOneTurnDisplayElement = createPlayerOneTurnDisplayElement();
+    let playerTwoTurnDisplayElement = createPlayerTwoDisplayElement();
 
-    gameController();
+    gameController(playerOneTurnDisplayElement, playerTwoTurnDisplayElement );
    
 
 };
@@ -81,43 +83,32 @@ const Player = (name, signature) => {
     const getSignature = () => signature;
     const getPlayStatus = () => isPlayed;
     const getName = () => name;
-    const changePlayStatus = () => {
-        isPlayed = !getPlayStatus();
-    }
     const getScore = () => score;
     const incrementPlayerScore = () => ++score;
-    return {getSignature, getPlayStatus, changePlayStatus, getScore, incrementPlayerScore, getName};
+    return {getSignature, getPlayStatus, getScore, incrementPlayerScore, getName};
 }
 
-function createPlayers() {
-    
-    
+function addEventListenerToForm() {
     const submitButton = document.querySelector("#submit");
     submitButton.addEventListener("click", handleSubmit);
-   
     
 }
 function handleSubmit(e){
 
     e.preventDefault();
-    const playerOneInputForm = document.querySelector("#player-one");
-    const playerTwoInputForm = document.querySelector("#player-two");
-    playerOne = Player(playerOneInputForm.value, "X");
-    playerTwo = Player(playerTwoInputForm.value, "O");
-    const form = document.querySelector(".form-container"); 
-    form.style.display = "none";
-    playerOneInputForm.value ="";
-    playerTwoInputForm.value ="";
+    const { playerOneInputForm, playerTwoInputForm } = getFormData();
+    createPlayersFromFormData(playerOneInputForm, playerTwoInputForm);
+    clearFormData(playerOneInputForm, playerTwoInputForm);
     createGameBoard();
 }
 
-const gameController = () => {
+const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
 
     let moveCount = 0;
     let roundCount = 1;
     let roundEnded = false;
     let currentPlayer = playerOne;
-
+    togglePlayerOnesTurnDisplay(playerOneTurnDisplay);
     toggleBoardNodeClickEventListeners(true);
   
     function changeNodeValue(e) {
@@ -125,36 +116,46 @@ const gameController = () => {
         let targetGameNode = gameBoardArray[(e.target.id)[0]][(e.target.id)[1]];
         if ( targetGameNode.getMark()) return;
 
-        targetGameNode.changeValue(currentPlayer.getSignature());
-        e.target.textContent = currentPlayer.getSignature();
+        changeDomElementsValue(targetGameNode, e);
 
-        currentPlayer.changePlayStatus(); //Doesnt do anything
         moveCount++;
 
         
         checkRoundEndConditions(targetGameNode.getValue(),(e.target.id)[0],(e.target.id)[1]);
         checkGameEndConditions(playerOne, playerTwo);
         
-        if(!roundEnded){
-            if( currentPlayer.getName() == playerOne.getName()) {
-                currentPlayer = playerTwo;
-                createTurnDisplayElement(currentPlayer);
-            }
-            else {
-                currentPlayer = playerOne;
-                createTurnDisplayElement(currentPlayer);
-            }
-        }
+        currentPlayer = changeCurrentPlayer(roundEnded, currentPlayer);
     }
 
-    function toggleBoardNodeClickEventListeners(bool){
+    function changeDomElementsValue(targetGameNode, e) {
+        targetGameNode.changeValue(currentPlayer.getSignature());
+        e.target.textContent = currentPlayer.getSignature();
+    }
+
+    function toggleBoardNodeClickEventListeners(newRound){
         const boardNodes = Array.from(document.querySelectorAll(".board-node"));
     
-        bool ? boardNodes.forEach(node => node.addEventListener("click", changeNodeValue)):
+        newRound ? boardNodes.forEach(node => node.addEventListener("click", changeNodeValue)):
         boardNodes.forEach(node => node.removeEventListener("click", changeNodeValue));
     }
     
     
+    function changeCurrentPlayer(roundEnded, currentPlayer) {
+        if (!roundEnded) {
+            if (currentPlayer.getName() == playerOne.getName()) {
+                currentPlayer = playerTwo;
+                togglePlayerTwosTurnDisplay(playerTwoTurnDisplay);
+                togglePlayerOnesTurnDisplay(playerOneTurnDisplay);
+            }
+            else {
+                currentPlayer = playerOne;
+                togglePlayerOnesTurnDisplay(playerOneTurnDisplay);
+                togglePlayerTwosTurnDisplay(playerTwoTurnDisplay);
+
+            }
+        }
+        return currentPlayer;
+    }
 
     function checkRoundEndConditions(nodeValue, currentRow, currentColumn ){
         const totalRowsAndColumns = 3;
@@ -165,12 +166,8 @@ const gameController = () => {
                 roundEnded = false;
                 break;}
             if(i == totalRowsAndColumns-1){
-                console.log(currentPlayer.getName() + "has won!")
-                currentPlayer.incrementPlayerScore();
-                roundCount++;
-                updateDisplay(roundCount);
-                clearBoard();
-                roundEnded = true;
+                handleRoundWinValuables();
+                return;
             }
         }
         //check col
@@ -180,12 +177,8 @@ const gameController = () => {
                 roundEnded = false;
                 break;}
             if(i == totalRowsAndColumns-1){
-                console.log(currentPlayer.getName() + "has won!")
-                currentPlayer.incrementPlayerScore();
-                roundCount++;
-                updateDisplay(roundCount);
-                clearBoard();
-                roundEnded = true;
+                handleRoundWinValuables();
+                return;
             }
         }
         //check diag
@@ -197,17 +190,13 @@ const gameController = () => {
                     break;
                 }
                 if(i == totalRowsAndColumns-1){
-                    console.log(currentPlayer.getName() + "has won!")
-                    currentPlayer.incrementPlayerScore();
-                    roundCount++;
-                    updateDisplay(roundCount);
-                    clearBoard();
-                    roundEnded = true;
+                    handleRoundWinValuables();
+                    return;
                 }
             }
         }
         //check anti diag
-        if(currentRow + currentColumn == totalRowsAndColumns - 1){
+        if((+currentRow) + (+currentColumn) == totalRowsAndColumns - 1){
             for(let i = 0; i < totalRowsAndColumns; i++){
                 if(gameBoardArray[i][(totalRowsAndColumns-1)-i].getValue() != nodeValue)
                 {
@@ -215,22 +204,31 @@ const gameController = () => {
                     break;
                 }
                 if(i == totalRowsAndColumns-1){
-                    console.log(currentPlayer.getName() + "has won!")
-                    currentPlayer.incrementPlayerScore();
-                    roundCount++;
-                    updateDisplay(roundCount);
-                    clearBoard();
-                    roundEnded = true;
+                    handleRoundWinValuables();
                 }
             }
         }
         //check draw
         if(moveCount == (Math.pow(totalRowsAndColumns, 2) - 1)){
-            console.log("It's a draw.")
+            handleRoundDrawValuables();
+            return;
+        }
+
+        function handleRoundDrawValuables() {
+            console.log("It's a draw.");
             roundCount++;
-            updateDisplay(roundCount);
-            clearBoard();
             roundEnded = true;
+            updateScoreAndTextDisplay(roundCount);
+            clearBoard(playerOneTurnDisplay, playerTwoTurnDisplay);
+        }
+
+        function handleRoundWinValuables() {
+            console.log(currentPlayer.getName() + "has won!");
+            currentPlayer.incrementPlayerScore();
+            roundCount++;
+            roundEnded = true;
+            updateScoreAndTextDisplay(roundCount);
+            clearBoard(playerOneTurnDisplay, playerTwoTurnDisplay);
         }
     }
 
@@ -238,21 +236,24 @@ const gameController = () => {
         switch(true) {
             case (firstPlayer.getScore() == 3 && secondPlayer.getScore()== 0 ):
                 console.log("Game over." + `${firstPlayer.getName()} has won!`)
+                toggleBoardNodeClickEventListeners(false);
                 break;
             case ( secondPlayer.getScore() == 3 && firstPlayer.getScore()== 0 ):
-                console.log("Game over." + `${secondPlayer.getName()} has won!`)
+                console.log("Game over." + `${secondPlayer.getName()} has won!`);
+                toggleBoardNodeClickEventListeners(false);
                 break;
             case ( roundCount > 5 ):
                 firstPlayer.getScore() > secondPlayer.getScore() ? 
                 console.log("Game over." + `${firstPlayer.getName()} has won!`):
                 console.log("Game over." + `${secondPlayer.getName()} has won!`);
+                toggleBoardNodeClickEventListeners(false);
                 break;
             default:
                 break;
         }
     }
 
-    function clearBoard(){
+    function clearBoard(playerOnesTurnDisplayElement, playerTwosTurnDisplayElement){
         gameBoardArray.forEach(nodeGroup => { nodeGroup.forEach(node => {
             node.resetMark();
             node.resetValue();
@@ -263,11 +264,30 @@ const gameController = () => {
 
         currentPlayer = playerOne;
         moveCount = 0;
-        createTurnDisplayElement(currentPlayer);
+        clearPlayersTurnDisplay(playerOnesTurnDisplayElement, playerTwosTurnDisplayElement);
     }
 }
 
-function updateDisplay(round){  //currentPlaying'i yeni fon a argument olara ata?
+
+function createPlayersFromFormData(playerOneInputForm, playerTwoInputForm) {
+    playerOne = Player(playerOneInputForm.value, "X");
+    playerTwo = Player(playerTwoInputForm.value, "O");
+}
+
+function getFormData() {
+    const playerOneInputForm = document.querySelector("#player-one");
+    const playerTwoInputForm = document.querySelector("#player-two");
+    return { playerOneInputForm, playerTwoInputForm };
+}
+
+function clearFormData(playerOneInputForm, playerTwoInputForm) {
+    const form = document.querySelector(".form-container");
+    form.style.display = "none";
+    playerOneInputForm.value = "";
+    playerTwoInputForm.value = "";
+}
+
+function updateScoreAndTextDisplay(round){  //currentPlaying'i yeni fon a argument olara ata?
     
     let playerOneScoreText = document.querySelector("#player-one-score-text");
     let playerTwoScoreText = document.querySelector("#player-two-score-text");
@@ -278,7 +298,7 @@ function updateDisplay(round){  //currentPlaying'i yeni fon a argument olara ata
     roundText.textContent = `Round: ${round}`;
 }
 
-function createMatrix( rows, cols, arr){
+function createBoardMatrix( rows, cols, arr){
         
     // Creates all lines:
     for(var i=0; i < rows; i++){
@@ -293,39 +313,40 @@ function createMatrix( rows, cols, arr){
     return arr;
 }
 
-//TODO
-function createTurnDisplayElement(currentPlaying){
-    let playerOneDisplayCreated = false;
-    let playerTwoDisplayCreated = false;
+//TODO bunun yerine html'e add yap ve toggle yap sıraya gore
+function createPlayerOneTurnDisplayElement(){
     
-    if(currentPlaying.getName() == playerOne.getName()){
-        if(!playerOneDisplayCreated){
-            let playerOnesTurnElement = document.createElement("h2");
-            playerOnesTurnElement.textContent = `${playerOne.getName()} is playing`;
-            let playerOneParent = document.querySelector(".player-one-display")
-            playerOneParent.appendChild(playerOnesTurnElement);
-        }else{
-            playerOnesTurnElement.textContent = `${playerOne.getName()} is playing`;
-            playerTwosTurnElement.style.display = "none";
-        }
+    let playerOnesTurnDisplayElement = document.createElement("h2");
+    playerOnesTurnDisplayElement.textContent = `${playerOne.getName()} is playing`;
+    playerOnesTurnDisplayElement.classList.add("playeronesturndisplayelement");
+    let playerOneParent = document.querySelector(".player-one-display")
+    playerOneParent.appendChild(playerOnesTurnDisplayElement);
+    return playerOnesTurnDisplayElement;
+}
+function createPlayerTwoDisplayElement(){
     
-    }
-    else{
-        if(!playerTwoDisplayCreated){
+    let playerTwosTurnDisplayElement = document.createElement("h2");
+    playerTwosTurnDisplayElement.textContent = `${playerTwo.getName()} is playing`;
+    playerTwosTurnDisplayElement.classList.add("playertwosturndisplayelement");
+    let playerTwoParent = document.querySelector(".player-two-display")
+    playerTwoParent.appendChild(playerTwosTurnDisplayElement);
+    return playerTwosTurnDisplayElement;
+}
 
-            let playerTwosTurnElement = document.createElement("h2");
-            playerTwosTurnElement.textContent = `${playerTwo.getName()} is playing`;
-            let playerTwoParent = document.querySelector(".player-two-display")
-            playerTwoParent.appendChild(playerTwosTurnElement);
-        }else{
-            playerTwosTurnElement.textContent = `${playerTwo.getName()} is playing`;
-            playerOnesTurnElement.style.display = "none";
+function togglePlayerOnesTurnDisplay(playerOnesDisplay) {
+    playerOnesDisplay.classList.toggle("playeronesturndisplayelement");
+}
+     
+function togglePlayerTwosTurnDisplay(playerTwosDisplay) {
+    playerTwosDisplay.classList.toggle("playertwosturndisplayelement");
+}
 
-        }
-      
-    }
+function clearPlayersTurnDisplay(playerOnesDisplay, playerTwosDisplay ){
+    playerOnesDisplay.classList.remove("playeronesturndisplayelement");
+    playerTwosDisplay.classList.add("playertwosturndisplayelement");
 }
 
 
+addEventListenerToForm();
 
-createPlayers();
+
