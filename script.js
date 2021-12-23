@@ -117,6 +117,9 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
         const newRoundButton = getNewRoundButtonByClass();
         newRoundButton.addEventListener("click", startNewRound);
 
+        const newGameButton = getNewGameButtonByClass();
+        newGameButton.addEventListener("click", startNewGame);
+
         togglePlayerOnesTurnDisplay(playerOneTurnDisplay);
         toggleBoardNodeClickEventListeners(true);
     
@@ -226,7 +229,6 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
             }
 
             function handleRoundDrawConditions() {
-                console.log("It's a draw.");
                 roundCount++;
                 roundEnded = true;
                 changeRoundWinnerDisplayHeaderText(currentPlayer, true);
@@ -256,25 +258,34 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
         function checkGameEndConditions(firstPlayer, secondPlayer){
             switch(true) {
                 case (firstPlayer.getScore() == 3 && secondPlayer.getScore()== 0 ):
-                    changeGameWinnerDisplayHeaderText(firstPlayer);
+                    changeGameWinnerDisplayHeaderTextToWin(firstPlayer);
                     toggleBoardNodeClickEventListeners(false);
-                    hideNewRoundButtonClassById();
+                    toggleNewRoundButtonClassById();
                     toggleNewGameButtonClass();
                     gameEnded = true;
                     break;
                 case ( secondPlayer.getScore() == 3 && firstPlayer.getScore()== 0 ):
-                    changeGameWinnerDisplayHeaderText(secondPlayer);
+                    changeGameWinnerDisplayHeaderTextToWin(secondPlayer);
                     toggleBoardNodeClickEventListeners(false);
-                    hideNewRoundButtonClassById();
+                    toggleNewRoundButtonClassById();
                     toggleNewGameButtonClass();
                     gameEnded = true;
                     break;
                 case ( roundCount > 5 ):
                     toggleBoardNodeClickEventListeners(false);
-                    firstPlayer.getScore() > secondPlayer.getScore() ? 
-                    changeGameWinnerDisplayHeaderText(firstPlayer):
-                    changeGameWinnerDisplayHeaderText(secondPlayer);
-                    hideNewRoundButtonClassById();
+                                      
+                    switch(true) {
+                        case(firstPlayer.getScore() === secondPlayer.getScore()):
+                            changeGameWinnerDisplayHeaderTextToDraw();
+                            break;
+                        case  (firstPlayer.getScore() > secondPlayer.getScore()):
+                            changeGameWinnerDisplayHeaderTextToWin(firstPlayer);
+                            break;
+                        case (firstPlayer.getScore() < secondPlayer.getScore()):
+                            changeGameWinnerDisplayHeaderTextToWin(secondPlayer);
+                            break;
+                    }
+                    toggleNewRoundButtonClassById();
                     toggleNewGameButtonClass();
                     gameEnded = true;
                     break;
@@ -295,12 +306,29 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
             e.target.classList.toggle("new-round-button");
             clearBoard(); //locl scope
             toggleBoardNodeClickEventListeners(true);
-            updateRoundDisplay(roundCount);
+            updateRoundCountDisplay(roundCount);
             hideRoundWinnderDisplayHeaderText();
         }
-        function updateRoundDisplay(roundCount) {
+        function updateRoundCountDisplay(roundCount) {
             let roundText = document.querySelector("#round");
             roundText.textContent = `Round: ${roundCount}`;
+        }
+       
+        const resetRoundCount = () => roundCount = 1;
+
+        function startNewGame(e){
+            e.target.classList.toggle("new-game-button");
+            clearBoard();
+            toggleBoardNodeClickEventListeners(true);
+            resetRoundCount();
+            updateRoundCountDisplay(roundCount);
+            hideRoundWinnderDisplayHeaderText();
+            resetCurrentPlayer();
+            resetMoveCount();
+            resetPlayerScores();
+            updateScoreTextDisplay();
+            gameEnded = false;
+            roundEnded = false;
         }
     }
 }
@@ -401,10 +429,12 @@ function toggleNewRoundButtonClass(){
     newRoundButton.classList.toggle("new-round-button");
     
 }
-function hideNewRoundButtonClassById(){
+function toggleNewRoundButtonClassById(){
     let newRoundButton = getNewRoundButtonByType();
-    newRoundButton.style.display = "none";
+    newRoundButton.classList.toggle("new-round-button");
+    
 }
+
 
 const getNewGameButtonByClass = () => document.querySelector(".new-game-button");
 
@@ -446,12 +476,28 @@ function createGameWinnerDisplayHeaderElement(){
     let gameWinnerDisplayHeaderParent = document.querySelector(".main-game-container");
     gameWinnerDisplayHeaderParent.appendChild(gameWinnerDisplayHeader);
 }
-function changeGameWinnerDisplayHeaderText(winner){
-    
+function findGameWinnerDisplayHeaderText() {
     let gameWinnerDisplayHeader = document.querySelector(".winner-display-header");
-    gameWinnerDisplayHeader.style.display = "block";
-    gameWinnerDisplayHeader.textContent = `Game is over! ${winner.getName()} has won!`;
+   
+    return gameWinnerDisplayHeader;
 }
+function changeGameWinnerDisplayHeaderTextToWin(winner){
+    
+    let gameWinnerDisplayHeader = findGameWinnerDisplayHeaderText();
+    gameWinnerDisplayHeader.style.display = "block";
+    gameWinnerDisplayHeader.textContent = `Game over! ${winner.getName()} has won!`;
+}
+
+function changeGameWinnerDisplayHeaderTextToDraw(){
+    let gameWinnerDisplayHeader = findGameWinnerDisplayHeaderText();    
+    gameWinnerDisplayHeader.style.display = "block";
+    gameWinnerDisplayHeader.textContent = `Game over! It's a draw!`;
+}
+function resetPlayerScores(){
+    playerOne.resetScore();
+    playerTwo.resetScore();
+}
+
 
 addEventListenerToForm();
 
