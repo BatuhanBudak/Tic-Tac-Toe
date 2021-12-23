@@ -16,6 +16,12 @@ body{
     justify-content: space-around;
     gap: 15px;
 }
+.roundContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-self: center;
+}
 
 .display-and-grid-container{
     display: flex;
@@ -24,6 +30,13 @@ body{
 
 #round{
     align-self: center;
+}
+
+.new-round-button{
+    display: none;
+}
+.new-game-button{
+    display: none;
 }
 
 .game-board-container{
@@ -37,7 +50,7 @@ body{
     flex-basis: auto;
     align-content: flex-end;
     margin-top: 25px;
-    
+    align-self: center;
  }
 
 .player-one-display,
@@ -59,4 +72,8 @@ body{
 .playeronesturndisplayelement,
 .playertwosturndisplayelement{
     display: none;
+}
+
+.winner-display-header{
+    align-self: center;
 }
