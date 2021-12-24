@@ -52,6 +52,9 @@ body{
     margin-top: 25px;
     align-self: center;
  }
+.board-node{
+    cursor: pointer;
+}
 
 .player-one-display,
 .player-two-display{
