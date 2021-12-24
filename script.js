@@ -80,18 +80,16 @@ const GameBoardNode = function Node(id, value = "") {
 
 const Player = (name, signature) => {
     
-    let isPlayed = false;
     let score = 0;
     const getSignature = () => signature;
-    const getPlayStatus = () => isPlayed;
     const getName = () => name;
     const getScore = () => score;
     const incrementPlayerScore = () => ++score;
     const resetScore = () => score = 0;
-    return {getSignature, getPlayStatus, getScore, incrementPlayerScore, getName, resetScore};
+    return {getSignature, getScore, incrementPlayerScore, getName, resetScore};
 }
 
-function addEventListenerToForm() {
+function addEventListenerToNameForm() {
     const submitButton = document.querySelector("#submit");
     submitButton.addEventListener("click", handleSubmit);
     
@@ -113,7 +111,7 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
     let currentPlayer = playerOne;
     let gameEnded = false;
 
-    if(!gameEnded){
+    
         const newRoundButton = getNewRoundButtonByClass();
         newRoundButton.addEventListener("click", startNewRound);
 
@@ -330,8 +328,8 @@ const gameController = (playerOneTurnDisplay, playerTwoTurnDisplay) => {
             gameEnded = false;
             roundEnded = false;
         }
-    }
 }
+
 
 
 function createPlayersFromFormData(playerOneInputForm, playerTwoInputForm) {
@@ -421,7 +419,7 @@ function resetPlayersTurnDisplay(playerOnesDisplay, playerTwosDisplay ){
 }
 
 const getNewRoundButtonByClass = () => document.querySelector(".new-round-button");
-const getNewRoundButtonByType = () => document.querySelector("#new-round-button");
+const getNewRoundButtonById = () => document.querySelector("#new-round-button");
 
 function toggleNewRoundButtonClass(){
     let newRoundButton = getNewRoundButtonByClass();
@@ -430,7 +428,7 @@ function toggleNewRoundButtonClass(){
     
 }
 function toggleNewRoundButtonClassById(){
-    let newRoundButton = getNewRoundButtonByType();
+    let newRoundButton = getNewRoundButtonById();
     newRoundButton.classList.toggle("new-round-button");
     
 }
@@ -499,6 +497,6 @@ function resetPlayerScores(){
 }
 
 
-addEventListenerToForm();
+addEventListenerToNameForm();
 
 
